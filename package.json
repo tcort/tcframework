@@ -1,0 +1,25 @@
+{
+  "name": "tcframework",
+  "version": "0.0.0",
+  "description": "TC's JavaScript Framework",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "find . -name \\*.test.js -exec node {} \\;"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tcort/tcframework.git"
+  },
+  "keywords": [
+    "framework"
+  ],
+  "author": "Thomas Cort <linuxgeek@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tcort/tcframework/issues"
+  },
+  "homepage": "https://github.com/tcort/tcframework#readme"
+}
