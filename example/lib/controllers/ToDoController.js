@@ -6,15 +6,14 @@ const {
 } = require('../../../');
 
 class ToDoController extends Controller  {
-    constructor(storage) {
+    constructor(storage, logger) {
         super(
-            // schema
             Validator.object({
                 task: Validator.string().min(1).max(255),
                 done: Validator.boolean(),
             }),
-            // i/o
-            storage
+            storage,
+            logger
         );
     }
 }
