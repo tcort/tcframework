@@ -6,10 +6,8 @@ const helloRoute = new Route({
     method: 'GET',
     pattern: '^/hello/(?<name>[A-Za-z]+)$',
     handler: async (req, res) => {
-        res.writeHead(200, {
-            'Content-Type': 'text/plain',
-        });
-        res.end(`Hello, ${req.params.name}!`);
+        res.locals.name = req.params.name;
+        res.render(`Hello, [=/name]`);
     },
 });
 
