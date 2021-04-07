@@ -95,6 +95,43 @@ new TestSuite('LengthCheck', [
 
 ## TCTemplate Engine
 
+Similar to many templating engines, TCTemplate uses tags along with an object
+called `locals` to customize the output. Tags begin with `[` and end with `]`.
+Variables from locals are referenced with JSON Pointers (RFC6901).
+
+To escape `[` and `]` (e.g. if the text of the template contains `[` and `]`
+that are not part of tags), simply use the HTML entity codes `&#91;` and `&#93;`
+respectively.
+
+### Variables
+
+Variables can be inserted into the output with either the `-` (unescaped) or
+`=` (escaped) tag containing a JSONPointer into `locals`.
+
+Input:
+
+```
+[-/math/expr]
+[=/math/expr]
+```
+
+locals:
+
+```
+{
+    "math": {
+        "expr": "2 < 4"
+    }
+}
+```
+
+Output:
+
+```
+2 < 4
+2 &#60; 4
+```
+
 ### Comments
 
 The comment tag suppresses the enclosed text from being output.
