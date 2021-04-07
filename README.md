@@ -167,6 +167,41 @@ Output:
 Welcome Back!
 ```
 
+### Iteration
+
+Blocks can be repeated for each element of an array with the `for` tag.
+The `for` tag takes a JSON Pointer which denotes where the current element
+will be stored and a JSON Pointer which denotes the path to the array.
+
+Input:
+
+```
+[for /day in /daysofweek] [=/day] [/for]
+```
+
+locals:
+
+```
+{
+    daysofweek: [
+        'Sunday',
+        'Monday',
+        'Tuesday',
+        'Wednesday',
+        'Thursday',
+        'Friday',
+        'Saturday',
+    ]
+}
+```
+
+Output:
+
+```
+ Sunday  Monday  Tuesday  Wednesday  Thursday  Friday  Saturday 
+```
+
+
 ### Comments
 
 The comment tag suppresses the enclosed text from being output.
@@ -177,7 +212,7 @@ Input:
 foo[comment]this is a comment and the contents are not output[/comment]bar
 ```
 
-Outputs:
+Output:
 
 ```
 foobar
