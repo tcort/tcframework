@@ -1,11 +1,18 @@
 'use strict';
 
-const { Router } = require('..');
+const {
+    ConsoleLogger,
+    Router,
+} = require('..');
+
 const helloRoute = require('./lib/routes/helloRoute');
 const Server = require('./lib/Server');
 
-const router = new Router();
+const logger = new ConsoleLogger();
+
+const router = new Router({ logger });
 router.register(helloRoute);
 
-const server = new Server({ router });
-server.listen(3000, () => console.log('listening. Visit http://localhost:3000/hello/Alice'));
+new Server({ router }).listen(3000, () => logger.inProdEnv('listening. Visit http://localhost:3000/hello/Alice'));
+
+process.on('exit', () => logger.inProdEnv('Exiting...'));
