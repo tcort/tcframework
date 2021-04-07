@@ -95,13 +95,28 @@ new TestSuite('LengthCheck', [
 
 ## TCTemplate Engine
 
+The TCTemplate Engine implements a pure functional templating language.
+For a given set of inputs (template text and variables), the engine
+always produces the same results.
+
 Similar to many templating engines, TCTemplate uses tags along with an object
 called `locals` to customize the output. Tags begin with `[` and end with `]`.
 Variables from locals are referenced with JSON Pointers (RFC6901).
 
-To escape `[` and `]` (e.g. if the text of the template contains `[` and `]`
+Tag summary:
+
+- `[=/JSONPointer/path/to/variable]` - outputs the value (with HTML entities escaped)
+- `[-/JSONPointer/path/to/variable]` - outputs the value (unescaped)
+
+### Composing documents with `[` and `]` characters
+
+`[` and `]` are special characters in this template language. To escape `[`
+and `]` (e.g. if the text of the template contains `[` and `]`
 that are not part of tags), simply use the HTML entity codes `&#91;` and `&#93;`
 respectively.
+
+- `[` becomes `&#91;`
+- `]` becomes `&#93;`
 
 ### Variables
 
