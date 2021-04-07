@@ -132,6 +132,41 @@ Output:
 2 &#60; 4
 ```
 
+### Conditionals
+
+Blocks can be conditionally inserted into the output with the `if` tag.
+To have the content rendered in the output, supply a JSON Pointer that
+points to a variable in locals which is `true`.
+
+Input:
+
+```
+[if /user/returning]
+Welcome Back!
+[/if]
+
+[if /user/verified]
+Your account is verified
+[/if]
+```
+
+locals:
+
+```
+{
+    "user": {
+        "returning": true,
+        "verified": false
+    }
+}
+```
+
+Output:
+
+```
+Welcome Back!
+```
+
 ### Comments
 
 The comment tag suppresses the enclosed text from being output.
