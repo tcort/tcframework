@@ -2,13 +2,18 @@
 
 const {
     ConsoleLogger,
+    JSONStorage,
     Server,
     Router,
 } = require('..');
+const ToDoController = require('./lib/controllers/ToDoController');
+const path = require('path');
 
 const helloRoute = require('./lib/routes/helloRoute');
 
+const storage = new JSONStorage({ basedir: path.join(path.sep, 'tmp'), pk: 'id' });
 const logger = new ConsoleLogger();
+const toDoController = new ToDoController(storage, logger);
 
 const router = new Router({ logger });
 router.register(helloRoute);
