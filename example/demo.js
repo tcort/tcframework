@@ -1,5 +1,6 @@
 'use strict';
 
+const path = require('path');
 const {
     ConsoleLogger,
     JSONStorage,
@@ -8,17 +9,18 @@ const {
 } = require('..');
 const { ToDoController } = require('./lib/controllers');
 const { ToDoRoutes } = require('./lib/routes');
-const path = require('path');
 
-const storage = new JSONStorage({ basedir: path.join(path.sep, 'tmp'), pk: 'id' });
 const logger = new ConsoleLogger();
-const controllers = {
-    todo: new ToDoController(storage, logger),
-};
-
-const router = new Router({ controllers, logger });
+const router = new Router({
+    controllers: {
+        todo: new ToDoController(new JSONStorage(), logger),
+    },
+    logger
+});
 router.register(ToDoRoutes);
 
-new Server({ router }).listen(3000, () => logger.inProdEnv('listening. Visit http://localhost:3000/hello/Alice'));
+new Server({
+    router,
+ }).listen(3000, () => logger.inProdEnv('Listening...'));
 
 process.on('exit', () => logger.inProdEnv('Exiting...'));
