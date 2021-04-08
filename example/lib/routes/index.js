@@ -1,7 +1,9 @@
 'use strict';
 
-const ToDoRoutes = require('./ToDoRoutes');
+const IndexRoute = require('./IndexRoute');
+const ToDoReadRoute = require('./ToDoReadRoute');
 
 module.exports = {
-    ToDoRoutes,
+    IndexRoute,
+    ToDoReadRoute,
 };
