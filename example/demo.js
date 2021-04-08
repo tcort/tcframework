@@ -2,11 +2,11 @@
 
 const {
     ConsoleLogger,
+    Server,
     Router,
 } = require('..');
 
 const helloRoute = require('./lib/routes/helloRoute');
-const Server = require('./lib/Server');
 
 const logger = new ConsoleLogger();
 
