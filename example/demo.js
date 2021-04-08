@@ -9,9 +9,8 @@ const {
     Router,
 } = require('..');
 
-// import out controllers and routes
+// import out controllers
 const { ToDoController } = require('./lib/controllers');
-const { IndexRoute, ToDoReadRoute } = require('./lib/routes');
 
 // create a router
 const logger = new ConsoleLogger();
@@ -23,13 +22,10 @@ const router = new Router({
     logger
 });
 
-// register routes
-router.register(new IndexRoute({}));
-router.register(new ToDoReadRoute({}));
-router.register(new StaticFilesRoute({
-    mountpoint: '/',
-    filesdir: path.join(__dirname, 'public'),
-}));
+// routes
+router.get('/', async (req, res) => {
+    await res.renderFile('index.tct');
+});
 
 new Server({ router }).listen(3000, () => logger.inProdEnv('Listening...'));
 process.on('exit', () => logger.inProdEnv('Exiting...'));
