@@ -1,6 +1,7 @@
 'use strict';
 
 const http = require('http');
+const { StatusCode, StatusText } = require('../../lib/refdata/HttpStatusCodes');
 
 class Server {
 
@@ -12,12 +13,11 @@ class Server {
             if (routed) { // an internal route handled the request.
                 return;
             }
-            const NOT_FOUND = 'Not Found';
-            res.writeHead(404, NOT_FOUND, {
-                'Content-Length': Buffer.byteLength(NOT_FOUND),
+            res.writeHead(StatusCode.NOT_FOUND, StatusText.NOT_FOUND, {
+                'Content-Length': Buffer.byteLength(StatusText.NOT_FOUND),
                 'Content-Type': 'text/plain',
             });
-            res.end(NOT_FOUND);
+            res.end(StatusText.NOT_FOUND);
         });
     }
 
