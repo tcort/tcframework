@@ -1,4 +1,4 @@
 {
-    "task": "Say hello",
-    "done": false
+    "task": "say hello",
+    "done": true
 }

@@ -38,5 +38,11 @@ router.get(/^\/todos\/(?<id>[A-Za-z0-9-]+)$/, async (req, res) => {
     res.json(await req.controllers.todo.read(req.params.id));
 });
 
+// PUT /todos/:id
+router.put(/^\/todos\/(?<id>[A-Za-z0-9-]+)$/, async (req, res) => {
+    await req.controllers.todo.upsert(req.params.id, req.body);
+    res.json(await req.controllers.todo.read(req.params.id));
+});
+
 new Server({ router }).listen(3000, () => logger.inProdEnv('Listening...'));
 process.on('exit', () => logger.inProdEnv('Exiting...'));
