@@ -30,6 +30,9 @@ const router = new Router({
 
 // routes
 router.get('/', async (req, res) => {
+
+    res.locals.todos = (await req.controllers.todo.list()).reverse();
+
     await res.renderFile('index.tct');
 });
 
@@ -58,6 +61,10 @@ router.delete(/^\/todos\/(?<id>[A-Za-z0-9-]+)$/, async (req, res) => {
     res.json({ status: 'ok' });
 });
 
+router.use(new StaticFilesRoute({
+    filesdir: path.join(__dirname, 'public'),
+    mountpoint: '/',
+}));
 
 new Server({ router }).listen(3000, () => logger.inProdEnv('Listening...'));
 process.on('exit', () => logger.inProdEnv('Exiting...'));

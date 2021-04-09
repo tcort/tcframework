@@ -1,0 +1,19 @@
+body {
+    font-family: 'Trebuchet MS', sans-serif;
+    background-color: #cccccc;
+}
+
+header, footer, article {
+    background-color: #ffffff;
+    margin: 1em;
+    padding: 1em;
+    border: 0.1em solid #000000;
+}
+
+header, footer {
+    text-align: center;
+}
+
+.todo-done-true {
+    text-decoration: line-through;
+}
