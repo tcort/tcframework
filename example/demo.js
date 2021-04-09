@@ -38,6 +38,14 @@ router.get(/^\/todos\/(?<id>[A-Za-z0-9-]+)$/, async (req, res) => {
     res.json(await req.controllers.todo.read(req.params.id));
 });
 
+// POST /todos/:id
+router.post('/todos', async (req, res) => {
+    const id = await req.controllers.todo.create(req.body);
+
+    res.setHeader('Location', `/todos/${id}.json`);
+    res.json(await req.controllers.todo.read(id));
+});
+
 // PUT /todos/:id
 router.put(/^\/todos\/(?<id>[A-Za-z0-9-]+)$/, async (req, res) => {
     await req.controllers.todo.upsert(req.params.id, req.body);
