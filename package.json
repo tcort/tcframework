@@ -7,7 +7,7 @@
     "lib": "lib"
   },
   "scripts": {
-    "test": "node tcframework.js"
+    "test": "node tcframework.test.js"
   },
   "repository": {
     "type": "git",

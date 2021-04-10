@@ -23,6 +23,7 @@ const {
     ConsoleTestReporter,
     expect,
     LengthCheck,
+    MaxLengthCheck,
 } = require('./tcframework');
 
 ////////////////////////////////////////////
@@ -30,7 +31,9 @@ const {
 // all the tests!
 //
 ////////////////////////////////////////////
+
 new TestRunner([
+
     new TestSuite('LengthCheck', [
 
         new TestCase('checks that expected length matches input', () => {
@@ -52,5 +55,31 @@ new TestRunner([
             ].forEach((testcase) => expect(() => new LengthCheck(testcase.length).check(testcase.value)).toThrow('TCCheckError'));
         }),
 
-    ])
+    ]),
+
+    new TestSuite('MaxLengthCheck', [
+
+        new TestCase('checks that max length is greater than or equal to input length', () => {
+            [
+                { length: 0, value: '' },
+                { length: 0, value: [] },
+                { length: 1, value: 'x' },
+                { length: 1, value: ['x'] },
+                { length: 2, value: 'x' },
+                { length: 3, value: [1,2] },
+                { length: 3, value: 'foo' },
+                { length: 3, value: [1,2,3] },
+            ].forEach((testcase) => expect(() => new MaxLengthCheck(testcase.length).check(testcase.value)).notToThrow());
+        }),
+        new TestCase('throws error when max length is not greater than or equal to input length', () => {
+            [
+                { length: 0, value: 'apple' },
+                { length: 1, value: 'apple' },
+                { length: 1, value: 'fo' },
+                { length: 3, value: 'apple' },
+            ].forEach((testcase) => expect(() => new MaxLengthCheck(testcase.length).check(testcase.value)).toThrow('TCCheckError'));
+        }),
+
+    ]),
+
 ]).execute(new ConsoleTestReporter());

@@ -344,7 +344,10 @@ class ConsoleTestReporter extends TestReporter {
      */
     endTestCase(test, err = undefined) {
         if (err) {
-            console.log(`\tFAIL ${test.description} ${err.toString()}`);
+            console.log(`\tFAIL ${test.description}`);
+            console.error('=-=-=-=-=-=-=-=-=-=-=-=');
+            console.error(err);
+            console.error('=-=-=-=-=-=-=-=-=-=-=-=');
         } else {
             console.log(`\tPASS ${test.description}`);
         }
@@ -438,3 +441,38 @@ class LengthCheck extends Check {
 }
 
 module.exports.LengthCheck = LengthCheck;
+
+/**
+ * checks that the length of a value with a .length property (e.g. an array or string) is less than a given value
+ *
+ * @version 1.0.0
+ * @extends Check
+ */
+class MaxLengthCheck extends Check {
+
+    /**
+     * Creates a new instance of MaxLengthCheck.
+     *
+     * @constructor
+     * @param {number} n - the maximum allowable length
+     */
+    constructor(n) {
+        super();
+        this.n = n;
+    }
+
+    /**
+     * Checks that the length of the value is the same or less than the length passed to the constructor.
+     *
+     * @param {object} value - an object with a .length property (e.g. a string, an array, etc).
+     * @throws {TCError} a TCCheckError.
+     */
+    check(value) {
+        if (value.length > this.n) {
+            throw new TCError('TCCheckError', 'MaxLengthCheck: actual length exceeds max length', { expected: this.n, actual: value.length });
+        }
+    }
+}
+
+module.exports.MaxLengthCheck = MaxLengthCheck;
+
