@@ -485,7 +485,7 @@ module.exports.MaxLengthCheck = MaxLengthCheck;
 class MinLengthCheck extends Check {
 
     /**
-     * Creates a new instance of MaxLengthCheck.
+     * Creates a new instance of MinLengthCheck.
      *
      * @constructor
      * @param {number} n - the minimum allowable length
@@ -510,3 +510,68 @@ class MinLengthCheck extends Check {
 
 module.exports.MinLengthCheck = MinLengthCheck;
 
+/**
+ * checks that the object validates against the validation object supplied to the constructor.
+ *
+ * @version 1.0.0
+ * @extends Check
+ */
+class ObjectCheck extends Check {
+
+    /**
+     * Creates a new instance of Object.
+     *
+     * @constructor
+     * @param {object} obj - an object with values that are validators.
+     */
+    constructor(obj) {
+        super();
+        this.obj = obj;
+    }
+
+    /**
+     * Checks the validity of values by validating each one against the validators in the object passed to the constructor.
+     *
+     * @param {object} value - an object.
+     * @throws {TCError} a TCCheckError.
+     */
+    check(value) {
+        Object.keys(this.obj).forEach((key) => this.obj[key].validate(value[key]));
+    }
+}
+
+module.exports.ObjectCheck = ObjectCheck;
+
+/**
+ * checks that the value has the same type as supplied to the constructor.
+ *
+ * @version 1.0.0
+ * @extends Check
+ */
+class TypeCheck extends Check {
+
+    /**
+     * Creates a new instance of Object.
+     *
+     * @constructor
+     * @param {string} type - a type such as number, object, string, etc.
+     */
+    constructor(type = 'undefined') {
+        super();
+        this.type = type;
+    }
+
+    /**
+     * Checks the typeof value against the type supplied to the constructor.
+     *
+     * @param {any} value - a value to check.
+     * @throws {TCError} a TCCheckError.
+     */
+    check(value) {
+        if (typeof value !== this.type) {
+            throw new TCError('TCCheckError', 'TypeCheck: actual type does not equal expected type', { expected: this.type, actual: typeof value });
+        }
+    }
+}
+
+module.exports.TypeCheck = TypeCheck;
