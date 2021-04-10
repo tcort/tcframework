@@ -2,7 +2,7 @@
   "name": "tcframework",
   "version": "0.0.0",
   "description": "TC's JavaScript Framework",
-  "main": "index.js",
+  "main": "tcframework.js",
   "directories": {
     "lib": "lib"
   },
