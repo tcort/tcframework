@@ -476,3 +476,37 @@ class MaxLengthCheck extends Check {
 
 module.exports.MaxLengthCheck = MaxLengthCheck;
 
+/**
+ * checks that the length of a value with a .length property (e.g. an array or string) is less than a given value
+ *
+ * @version 1.0.0
+ * @extends Check
+ */
+class MinLengthCheck extends Check {
+
+    /**
+     * Creates a new instance of MaxLengthCheck.
+     *
+     * @constructor
+     * @param {number} n - the minimum allowable length
+     */
+    constructor(n) {
+        super();
+        this.n = n;
+    }
+
+    /**
+     * Checks that the length of the value is the same or greater than the length passed to the constructor.
+     *
+     * @param {object} value - an object with a .length property (e.g. a string, an array, etc).
+     * @throws {TCError} a TCCheckError.
+     */
+    check(value) {
+        if (value.length < this.n) {
+            throw new TCError('TCCheckError', 'MinLengthCheck: actual length less than min length', { expected: this.n, actual: value.length });
+        }
+    }
+}
+
+module.exports.MinLengthCheck = MinLengthCheck;
+
