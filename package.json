@@ -7,7 +7,7 @@
     "lib": "lib"
   },
   "scripts": {
-    "test": "find . -name \\*.test.js -exec node {} \\;"
+    "test": "node tcframework.js"
   },
   "repository": {
     "type": "git",

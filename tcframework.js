@@ -22,6 +22,8 @@
  * @license ISC
  */
 
+module.exports = {};
+
 /**
  * TCError represents an Error coming from TCFramework.
  *
@@ -49,6 +51,8 @@ class TCError extends Error {
         Object.assign(this, baggage);
     }
 }
+
+module.exports.TCError = TCError;
 
 /**
  * Expectation checks the value passed to the constructor meets the expectation
@@ -132,6 +136,8 @@ function expect(value) {
     return new Expectation(value);
 }
 
+module.exports.expect = expect;
+
 /**
  * TestStats hold statistics on tests executed by test suites
  *
@@ -160,6 +166,8 @@ class TestStats {
         return this.pass + this.fail;
     }
 }
+
+module.exports.TestStats = TestStats;
 
 /**
  * TestSuite is a named collection of TestCases
@@ -199,6 +207,8 @@ class TestSuite {
         return (stats.fail === 0);
     }
 }
+
+module.exports.TestSuite = TestSuite;
 
 /**
  * TestCase is a function with a description that tests some aspect of a program.
@@ -240,6 +250,8 @@ class TestCase {
         }
     }
 }
+
+module.exports.TestCase = TestCase;
 
 /**
  * TestReporter interface
@@ -286,6 +298,8 @@ class TestReporter {
     endTestCase(test, err = undefined) {}
 
 }
+
+module.exports.TestReporter = TestReporter;
 
 /**
  * ConsoleTestReporter outputs test results to the console.
@@ -338,6 +352,7 @@ class ConsoleTestReporter extends TestReporter {
 
 }
 
+module.exports.ConsoleTestReporter = ConsoleTestReporter;
 
 /**
  * TestRunner runs a set of test suites
@@ -364,15 +379,62 @@ class TestRunner {
     }
 }
 
-new TestRunner([
-    new TestSuite('example test suite', [
-        new TestCase('addition', function () {
-            expect(2 + 2).equals(4);
-            return true;
-        }),
-        new TestCase('subtraction', function () {
-            expect(2 - 2).equals(0);
-            return true;
-        }),
-    ]),
-]).execute(new ConsoleTestReporter());
+module.exports.TestRunner = TestRunner;
+
+/**
+ * Check evaluates some condition and either throws a TCCheckError or doesn't
+ *
+ * @private
+ * @version 1.0.0
+ */
+class Check {
+
+    /**
+     * Creates a new instance of Check.
+     *
+     * @constructor
+     */
+    constructor() {}
+
+    /**
+     * Checks the value.
+     *
+     * @param {any} value - a value to test
+     * @throws {TCError} a TCCheckError.
+     */
+    check(value) {}
+}
+
+/**
+ * checks the length of a value with a .length property (e.g. an array or string)
+ *
+ * @version 1.0.0
+ * @extends Check
+ */
+class LengthCheck extends Check {
+
+    /**
+     * Creates a new instance of LengthCheck.
+     *
+     * @constructor
+     * @param {number} n - the desired length for this check.
+     */
+    constructor(n) {
+        super();
+        this.n = n;
+    }
+
+    /**
+     * Checks that the length of the value is the same as the length passed to the constructor.
+     *
+     * @param {object} value - an object with a .length property (e.g. a string, an array, etc).
+     * @throws {TCError} a TCCheckError.
+     */
+    check(value) {
+        if (value.length !== this.n) {
+            throw new TCError('TCCheckError', 'LengthCheck: actual length does not equal expected length', { expected: this.n, actual: value.length });
+        }
+    }
+}
+
+module.exports.LengthCheck = LengthCheck;
