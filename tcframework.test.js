@@ -26,6 +26,7 @@ const {
     MaxLengthCheck,
     MinLengthCheck,
     TypeCheck,
+    PatternCheck,
 } = require('./tcframework');
 
 ////////////////////////////////////////////
@@ -54,7 +55,7 @@ new TestRunner([
                 { length: 1, value: 'apple' },
                 { length: 1, value: '' },
                 { length: 3, value: 'apple' },
-            ].forEach((testcase) => expect(() => new LengthCheck(testcase.length).check(testcase.value)).toThrow('TCCheckError'));
+            ].forEach((testcase) => expect(() => new LengthCheck(testcase.length).check(testcase.value)).toThrow('LengthCheckError'));
         }),
 
     ]),
@@ -79,7 +80,7 @@ new TestRunner([
                 { length: 1, value: 'apple' },
                 { length: 1, value: 'fo' },
                 { length: 3, value: 'apple' },
-            ].forEach((testcase) => expect(() => new MaxLengthCheck(testcase.length).check(testcase.value)).toThrow('TCCheckError'));
+            ].forEach((testcase) => expect(() => new MaxLengthCheck(testcase.length).check(testcase.value)).toThrow('MaxLengthCheckError'));
         }),
 
     ]),
@@ -103,7 +104,7 @@ new TestRunner([
                 { length: 1, value: '' },
                 { length: 2, value: 'x' },
                 { length: 3, value: '42' },
-            ].forEach((testcase) => expect(() => new MinLengthCheck(testcase.length).check(testcase.value)).toThrow('TCCheckError'));
+            ].forEach((testcase) => expect(() => new MinLengthCheck(testcase.length).check(testcase.value)).toThrow('MinLengthCheckError'));
         }),
 
     ]),
@@ -134,9 +135,26 @@ new TestRunner([
                 { type: 'object', value: -52 },
                 { type: 'undefined', value: /xy/g },
                 { type: 'number', value: new Date() },
-            ].forEach((testcase) => expect(() => new TypeCheck(testcase.type).check(testcase.value)).toThrow('TCCheckError'));
+            ].forEach((testcase) => expect(() => new TypeCheck(testcase.type).check(testcase.value)).toThrow('TypeCheckError'));
         }),
 
-    ])
+    ]),
+
+    new TestSuite('PatternCheck', [
+
+        new TestCase('checks that expected pattern matches input', () => {
+            [
+                { pattern: /apple/, value: 'crabapple' },
+                { pattern: /^[0-9]+$/, value: '1234567' },
+            ].forEach((testcase) => expect(() => new PatternCheck(testcase.pattern).check(testcase.value)).notToThrow());
+        }),
+        new TestCase('throws error when expected pattern does not match input', () => {
+            [
+                { pattern: /apple/, value: 'pear' },
+                { pattern: /^[a-z]+$/, value: 'apple sauce' },
+            ].forEach((testcase) => expect(() => new PatternCheck(testcase.pattern).check(testcase.value)).toThrow('PatternCheckError'));
+        }),
+
+    ]),
 
 ]).execute(new ConsoleTestReporter());

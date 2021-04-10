@@ -126,6 +126,8 @@ class Expectation {
     }
 }
 
+module.exports.Expectation = Expectation;
+
 /**
  * Accepts a value and returns a new TCExpectation for that value
  * @function expect
@@ -333,7 +335,7 @@ class ConsoleTestReporter extends TestReporter {
      * @param {TestStats} stats - an instance of TestStats containing pass/fail statistics
      */
     endTestSuite(suite, stats) {
-        console.log(`\n${stats.pass} passed, ${stats.fail} failed, ${stats.total} executed\n`);
+        console.log(`\n\t${stats.pass} passed, ${stats.fail} failed, ${stats.total} executed\n`);
     }
 
     /**
@@ -409,9 +411,10 @@ class Check {
 }
 
 /**
- * checks the length of a value with a .length property (e.g. an array or string)
+ * LengthCheck checks the length of a value with a .length property (e.g. an array or string)
  *
  * @version 1.0.0
+ * @private
  * @extends Check
  */
 class LengthCheck extends Check {
@@ -431,11 +434,11 @@ class LengthCheck extends Check {
      * Checks that the length of the value is the same as the length passed to the constructor.
      *
      * @param {object} value - an object with a .length property (e.g. a string, an array, etc).
-     * @throws {TCError} a TCCheckError.
+     * @throws {TCError} LengthCheckError
      */
     check(value) {
         if (value.length !== this.n) {
-            throw new TCError('TCCheckError', 'LengthCheck: actual length does not equal expected length', { expected: this.n, actual: value.length });
+            throw new TCError('LengthCheckError', 'LengthCheck: actual length does not equal expected length', { expected: this.n, actual: value.length });
         }
     }
 }
@@ -443,9 +446,10 @@ class LengthCheck extends Check {
 module.exports.LengthCheck = LengthCheck;
 
 /**
- * checks that the length of a value with a .length property (e.g. an array or string) is less than a given value
+ * MaxLengthCheck checks that the length of a value with a .length property (e.g. an array or string) is less than a given value
  *
  * @version 1.0.0
+ * @private
  * @extends Check
  */
 class MaxLengthCheck extends Check {
@@ -465,11 +469,11 @@ class MaxLengthCheck extends Check {
      * Checks that the length of the value is the same or less than the length passed to the constructor.
      *
      * @param {object} value - an object with a .length property (e.g. a string, an array, etc).
-     * @throws {TCError} a TCCheckError.
+     * @throws {TCError} MaxLengthCheckError
      */
     check(value) {
         if (value.length > this.n) {
-            throw new TCError('TCCheckError', 'MaxLengthCheck: actual length exceeds max length', { expected: this.n, actual: value.length });
+            throw new TCError('MaxLengthCheckError', 'MaxLengthCheck: actual length exceeds max length', { expected: this.n, actual: value.length });
         }
     }
 }
@@ -477,9 +481,10 @@ class MaxLengthCheck extends Check {
 module.exports.MaxLengthCheck = MaxLengthCheck;
 
 /**
- * checks that the length of a value with a .length property (e.g. an array or string) is less than a given value
+ * MinLengthCheck checks that the length of a value with a .length property (e.g. an array or string) is less than a given value
  *
  * @version 1.0.0
+ * @private
  * @extends Check
  */
 class MinLengthCheck extends Check {
@@ -499,11 +504,11 @@ class MinLengthCheck extends Check {
      * Checks that the length of the value is the same or greater than the length passed to the constructor.
      *
      * @param {object} value - an object with a .length property (e.g. a string, an array, etc).
-     * @throws {TCError} a TCCheckError.
+     * @throws {TCError} MinLengthCheckError
      */
     check(value) {
         if (value.length < this.n) {
-            throw new TCError('TCCheckError', 'MinLengthCheck: actual length less than min length', { expected: this.n, actual: value.length });
+            throw new TCError('MinLengthCheckError', 'MinLengthCheck: actual length less than min length', { expected: this.n, actual: value.length });
         }
     }
 }
@@ -511,15 +516,16 @@ class MinLengthCheck extends Check {
 module.exports.MinLengthCheck = MinLengthCheck;
 
 /**
- * checks that the object validates against the validation object supplied to the constructor.
+ * ObjectCheck checks that the object validates against the validation object supplied to the constructor.
  *
  * @version 1.0.0
+ * @private
  * @extends Check
  */
 class ObjectCheck extends Check {
 
     /**
-     * Creates a new instance of Object.
+     * Creates a new instance of ObjectCheck.
      *
      * @constructor
      * @param {object} obj - an object with values that are validators.
@@ -533,25 +539,30 @@ class ObjectCheck extends Check {
      * Checks the validity of values by validating each one against the validators in the object passed to the constructor.
      *
      * @param {object} value - an object.
-     * @throws {TCError} a TCCheckError.
+     * @throws {TCError} ObjectCheckError
      */
     check(value) {
-        Object.keys(this.obj).forEach((key) => this.obj[key].validate(value[key]));
+        try {
+            Object.keys(this.obj).forEach((key) => this.obj[key].validate(value[key]));
+        } catch (err) {
+            throw new TCError('ObjectCheckError', 'at least one value in the object did not pass validation', { err });
+        }
     }
 }
 
 module.exports.ObjectCheck = ObjectCheck;
 
 /**
- * checks that the value has the same type as supplied to the constructor.
+ * TypeCheck checks that the value has the same type as supplied to the constructor.
  *
  * @version 1.0.0
+ * @private
  * @extends Check
  */
 class TypeCheck extends Check {
 
     /**
-     * Creates a new instance of Object.
+     * Creates a new instance of TypeCheck.
      *
      * @constructor
      * @param {string} type - a type such as number, object, string, etc.
@@ -565,13 +576,202 @@ class TypeCheck extends Check {
      * Checks the typeof value against the type supplied to the constructor.
      *
      * @param {any} value - a value to check.
-     * @throws {TCError} a TCCheckError.
+     * @throws {TCError} TypeCheckError
      */
     check(value) {
         if (typeof value !== this.type) {
-            throw new TCError('TCCheckError', 'TypeCheck: actual type does not equal expected type', { expected: this.type, actual: typeof value });
+            throw new TCError('TypeCheckError', 'TypeCheck: actual type does not equal expected type', { expected: this.type, actual: typeof value });
         }
     }
 }
 
 module.exports.TypeCheck = TypeCheck;
+
+/**
+ * PatternCheck checks that the value matches the pattern supplied to the constructor.
+ *
+ * @version 1.0.0
+ * @private
+ * @extends Check
+ */
+class PatternCheck extends Check {
+
+    /**
+     * Creates a new instance of PatternCheck.
+     *
+     * @constructor
+     * @param {string|RegExp} pattern - a regular expression to match against.
+     */
+    constructor(pattern) {
+        super();
+        this.pattern = pattern instanceof RegExp ? pattern : new RegExp(pattern);
+    }
+
+    /**
+     * Checks the value against the pattern supplied to the constructor.
+     *
+     * @param {any} value - a value to check.
+     * @throws {TCError} PatternCheckError
+     */
+    check(value) {
+        if (!this.pattern.test(value)) {
+            throw new TCError('PatternCheckError', 'PatternCheck: actual value does not match pattern', { expected: this.pattern.toString(), actual: value });
+        }
+    }
+}
+
+module.exports.PatternCheck = PatternCheck;
+
+/**
+ * ValidatorBase is the basis for all type validators.
+ *
+ * @version 1.0.0
+ * @private
+ */
+class ValidatorBase {
+
+    /**
+     * Creates a new instance of ValidatorBase.
+     *
+     * @constructor
+     */
+    constructor() {
+        this.checks = [];
+    }
+
+    /**
+     * validates the value against a set of checks
+     *
+     * @param {any} value - a value to validate
+     * @throws {TCError} ValidatorError
+     */
+    validate(value) {
+        const checkErrors = [];
+
+        this.checks.forEach((checker) => {
+            try {
+                checker.check(value);
+            } catch (checkError) {
+                checkErrors.push(checkError);
+            }
+        });
+
+        if (checkErrors.length !== 0) {
+            throw new TCError('ValidatorError', 'ValidatorBase: one or more validation checks failed', { checkErrors });
+        }
+    }
+
+}
+
+module.exports.ValidatorBase = ValidatorBase;
+
+/**
+ * BooleanValidator validates a boolean
+ *
+ * @version 1.0.0
+ * @private
+ * @extends ValidatorBase
+ */
+class BooleanValidator extends ValidatorBase {
+
+    /**
+     * Creates a new instance of BooleanValidator.
+     *
+     * @constructor
+     */
+    constructor() {
+        super();
+        this.checks.push(new TypeCheck('boolean'));
+    }
+}
+
+module.exports.BooleanValidator = BooleanValidator;
+
+/**
+ * ObjectValidator validates an object
+ *
+ * @version 1.0.0
+ * @private
+ * @extends ValidatorBase
+ */
+class ObjectValidator extends ValidatorBase {
+
+    /**
+     * Creates a new instance of ObjectValidator.
+     *
+     * @constructor
+     */
+    constructor(obj = {}) {
+        super();
+        this.checks.push(new ObjectCheck(obj));
+    }
+}
+
+module.exports.ObjectValidator = ObjectValidator;
+
+/**
+ * StringValidator validates a string
+ *
+ * @version 1.0.0
+ * @private
+ * @extends ValidatorBase
+ */
+class StringValidator extends ValidatorBase {
+
+    /**
+     * Creates a new instance of StringValidator.
+     *
+     * @constructor
+     */
+    constructor() {
+        super();
+        this.checks.push(new TypeCheck('string'));
+    }
+
+    /**
+     * Checks that the length of the string is exactly n.
+     *
+     * @param {number} n - desired length of the string.
+     * @returns {StringValidator}
+     */
+    length(n) {
+        this.checks.push(new LengthCheck(n));
+        return this;
+    }
+
+    /**
+     * Checks that the length of the string is greater than or equal to n.
+     *
+     * @param {number} n - minimum length of the string.
+     * @returns {StringValidator}
+     */
+    min(n) {
+        this.checks.push(new MinLengthCheck(n));
+        return this;
+    }
+
+    /**
+     * Checks that the length of the string is less than or equal to n.
+     *
+     * @param {number} n - maximum length of the string.
+     * @returns {StringValidator}
+     */
+    max(n) {
+        this.checks.push(new MaxLengthCheck(n));
+        return this;
+    }
+
+    /**
+     * Checks that the string matches the pattern.
+     *
+     * @param {string|RegExp} pattern - regular expression to match against the string.
+     * @returns {StringValidator}
+     */
+    pattern(pattern) {
+        this.checks.push(new PatternCheck(pattern));
+        return this;
+    }
+}
+
+module.exports.StringValidator = StringValidator;
+
