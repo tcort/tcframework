@@ -58,7 +58,6 @@ module.exports.TCError = TCError;
  * Expectation checks the value passed to the constructor meets the expectation
  * denoted by the method calls.
  *
- * @private
  * @version 1.0.0
  */
 class Expectation {
@@ -389,7 +388,6 @@ module.exports.TestRunner = TestRunner;
 /**
  * Check evaluates some condition and either throws a TCCheckError or doesn't
  *
- * @private
  * @version 1.0.0
  */
 class Check {
@@ -414,7 +412,6 @@ class Check {
  * LengthCheck checks the length of a value with a .length property (e.g. an array or string)
  *
  * @version 1.0.0
- * @private
  * @extends Check
  */
 class LengthCheck extends Check {
@@ -449,7 +446,6 @@ module.exports.LengthCheck = LengthCheck;
  * MaxLengthCheck checks that the length of a value with a .length property (e.g. an array or string) is less than a given value
  *
  * @version 1.0.0
- * @private
  * @extends Check
  */
 class MaxLengthCheck extends Check {
@@ -484,7 +480,6 @@ module.exports.MaxLengthCheck = MaxLengthCheck;
  * MinLengthCheck checks that the length of a value with a .length property (e.g. an array or string) is less than a given value
  *
  * @version 1.0.0
- * @private
  * @extends Check
  */
 class MinLengthCheck extends Check {
@@ -519,7 +514,6 @@ module.exports.MinLengthCheck = MinLengthCheck;
  * ObjectCheck checks that the object validates against the validation object supplied to the constructor.
  *
  * @version 1.0.0
- * @private
  * @extends Check
  */
 class ObjectCheck extends Check {
@@ -556,7 +550,6 @@ module.exports.ObjectCheck = ObjectCheck;
  * TypeCheck checks that the value has the same type as supplied to the constructor.
  *
  * @version 1.0.0
- * @private
  * @extends Check
  */
 class TypeCheck extends Check {
@@ -591,7 +584,6 @@ module.exports.TypeCheck = TypeCheck;
  * PatternCheck checks that the value matches the pattern supplied to the constructor.
  *
  * @version 1.0.0
- * @private
  * @extends Check
  */
 class PatternCheck extends Check {
@@ -626,7 +618,6 @@ module.exports.PatternCheck = PatternCheck;
  * ValidatorBase is the basis for all type validators.
  *
  * @version 1.0.0
- * @private
  */
 class ValidatorBase {
 
@@ -669,7 +660,6 @@ module.exports.ValidatorBase = ValidatorBase;
  * BooleanValidator validates a boolean
  *
  * @version 1.0.0
- * @private
  * @extends ValidatorBase
  */
 class BooleanValidator extends ValidatorBase {
@@ -691,7 +681,6 @@ module.exports.BooleanValidator = BooleanValidator;
  * ObjectValidator validates an object
  *
  * @version 1.0.0
- * @private
  * @extends ValidatorBase
  */
 class ObjectValidator extends ValidatorBase {
@@ -713,7 +702,6 @@ module.exports.ObjectValidator = ObjectValidator;
  * StringValidator validates a string
  *
  * @version 1.0.0
- * @private
  * @extends ValidatorBase
  */
 class StringValidator extends ValidatorBase {
@@ -1041,3 +1029,104 @@ const MimeTypes = {
 };
 
 module.exports.MimeTypes = MimeTypes;
+
+/**
+ * Logger logs information messages intended for developers about the software's activities.
+ *
+ * @version 1.0.0
+ */
+class Logger {
+
+    /**
+     * Creates a new instance of Logger.
+     *
+     * @constructor
+     */
+    constructor() {}
+
+    /**
+     * Logs a message useful to the test/dev environments.
+     *
+     * @param {...any} args - any values that should be logged.
+     */
+    inTestEnv(...args) { }
+
+    /**
+     * Logs a message useful to the prod/test/dev environments.
+     *
+     * @param {...any} args - any values that should be logged.
+     */
+    inProdEnv(...args) { }
+
+    /**
+     * Logs a high priority message that should be seen by a human within the next 24 hours.
+     *
+     * @param {...any} args - any values that should be logged.
+     */
+    toInvestigateTomorrow(...args) { }
+
+    /**
+     * Logs an urgentmessage that should be seen by a human immediately
+     *
+     * @param {...any} args - any values that should be logged.
+     */
+    wakeMeInTheMiddleOfTheNight(...args) { }
+}
+
+module.exports.Logger = Logger;
+
+/**
+ * Logger logs information messages intended for developers about the software's activities.
+ *
+ * @version 1.0.0
+ * @extends Logger
+ */
+class ConsoleLogger extends Logger {
+
+    /**
+     * Creates a new instance of Logger.
+     *
+     * @constructor
+     */
+    constructor() {
+        super();
+    }
+
+    /**
+     * Logs a message useful to the test/dev environments.
+     *
+     * @param {...any} args - any values that should be logged.
+     */
+    inTestEnv(...args) {
+        console.log(`[${new Date().toISOString()}][DEBUG] ${args.join(' ')}`);
+    }
+
+    /**
+     * Logs a message useful to the prod/test/dev environments.
+     *
+     * @param {...any} args - any values that should be logged.
+     */
+    inProdEnv(...args) {
+        console.log(`[${new Date().toISOString()}][INFO] ${args.join(' ')}`);
+    }
+
+    /**
+     * Logs a high priority message that should be seen by a human within the next 24 hours.
+     *
+     * @param {...any} args - any values that should be logged.
+     */
+    toInvestigateTomorrow(...args) {
+        console.log(`[${new Date().toISOString()}][WARN] ${args.join(' ')}`);
+    }
+
+    /**
+     * Logs an urgentmessage that should be seen by a human immediately
+     *
+     * @param {...any} args - any values that should be logged.
+     */
+    wakeMeInTheMiddleOfTheNight(...args) {
+        console.log(`[${new Date().toISOString()}][ERROR] ${args.join(' ')}`);
+    }
+}
+
+module.exports.ConsoleLogger = ConsoleLogger;
