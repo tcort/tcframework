@@ -30,6 +30,7 @@ const {
     JSONPointer,
     TCTemplate,
     mtrand,
+    CombUUID,
 } = require('./tcframework');
 
 ////////////////////////////////////////////
@@ -467,6 +468,30 @@ new TestRunner([
             for (let i = 0; i < expected.length; i++) {
                 expect(output[i]).equals(expected[i]);
             }
+        }),
+
+    ]),
+
+    new TestSuite('CombUUID', [
+
+        new TestCase('CombUUID.encode(now = new Date()) returns a string', () => {
+            expect(CombUUID.encode()).toHaveType('string');
+        }),
+
+        new TestCase('CombUUID.encode(now = new Date()) returns 36 characters', () => {
+            expect(CombUUID.encode()).toHaveLength(36);
+        }),
+
+        new TestCase('CombUUID.encode(now = new Date()) returns a version 4 UUID', () => {
+            expect(CombUUID.encode()).matches(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+        }),
+
+        new TestCase('CombUUID.encode(now = new Date()) returns a variant b UUID', () => {
+            expect(CombUUID.encode()).matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-b[0-9a-f]{3}-[0-9a-f]{12}$/);
+        }),
+
+        new TestCase('CombUUID.encode(now = new Date()) timestamp parameter matches encoded timestamp in UUID', () => {
+            expect(CombUUID.encode(1578422706217)).matches(/8f8e8478/);
         }),
 
     ]),

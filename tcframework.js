@@ -110,6 +110,51 @@ class Expectation {
     }
 
     /**
+     * expect the value passed to the constructor to equal the type passed to this function.
+     *
+     * @param {string} expected - type we're expecting (e.g. string, number, object, etc)
+     * @param {string} message - error message when expectation is not met.
+     * @throws {TCError} an error with name TCExpectedToHaveTypeError if typeof actual !== expected.
+     * @returns {TCExpectation}
+     */
+    toHaveType(expected, message = 'typeof actual !== expected') {
+        if (typeof this.actual !== expected) {
+            throw new TCError('TCExpectedToHaveTypeError', message, { actual: typeof this.actual, expected });
+        }
+        return this;
+    }
+
+    /**
+     * expect the value passed to the constructor to have a .length equal to the length passed to this function.
+     *
+     * @param {number} expected - length we're expecting.
+     * @param {string} message - error message when expectation is not met.
+     * @throws {TCError} an error with name TCExpectedToHaveLengthError if actual.length !== expected.
+     * @returns {TCExpectation}
+     */
+    toHaveLength(expected, message = 'actual.length !== expected') {
+        if (this.actual.length !== expected) {
+            throw new TCError('TCExpectedToHaveLengthError', message, { actual: this.actual.length, expected });
+        }
+        return this;
+    }
+
+    /**
+     * expect the value passed to the constructor to match the string passed to this function.
+     *
+     * @param {RegExp} expected - regular expression to test the value against.
+     * @param {string} message - error message when expectation is not met.
+     * @throws {TCError} an error with name TCExpectedMatchesError if !expected.test(actual).
+     * @returns {TCExpectation}
+     */
+    matches(expected, message = '!expected.test(actual)') {
+        if (!expected.test(this.actual)) {
+            throw new TCError('TCExpectedMatchesError', message, { actual: this.actual, expected: expected.toString() });
+        }
+        return this;
+    }
+
+    /**
      * expect the value passed to the constructor strictly equals the expected value passed to this function.
      *
      * @param {any} expected - value to compare against actual value.
@@ -1709,6 +1754,98 @@ function mtrand(seed, upper_bound) {
 }
 
 module.exports.mtrand = mtrand;
+
+/**
+ * Random number generator for CombUUID.
+ * not secure, but it doesn't need to be unguessable.
+ *
+ * @version 1.0.0
+ */
+const comb_rng = mtrand(new Date().getTime(), 256);
+
+/**
+ * Implements COMB UUIDs (UUID v4 Variant B) which sort to chronological order.
+ *
+ * @version 1.0.0
+ */
+class CombUUID {
+
+    /**
+     * Generate a new COMB UUID hex string
+     *
+     * @static
+     * @param {Date} now - timestamp for this UUID
+     * @returns {string}
+     */
+    static encode(now = new Date()) {
+
+        if (!(now instanceof Date)) {
+            now = new Date(now);
+        }
+
+        // timestamp
+        const timestamp_js = now.getTime();
+        const timestamp_bin = timestamp_js * 100;
+        const timestamp_hex = timestamp_bin.toString(16);
+        const ts1 = timestamp_hex.substring(0, 8);
+        const ts2 = timestamp_hex.substring(8, 13);
+
+        // version
+        const version = '4';
+        const variant = 'b';
+
+        // random
+        const bytes = Buffer.alloc(18);
+        for (let i = 0; i < 18; i++) {
+            bytes.writeUInt8(comb_rng.next().value, i);
+        }
+
+        const bytes_hex = bytes.toString('hex');
+        const r1 = bytes_hex.substring(0, 3);
+        const r2 = bytes_hex.substring(3, 6);
+        const r3 = bytes_hex.substring(6, 18);
+
+        return `${ts1}-${ts2}-${version}${r1}-${variant}${r2}-${r3}`;
+    }
+
+    /**
+     * Decodes a COMB UUID hex string
+     *
+     * @param {string} uuid - hex string.
+     * @returns {object} pieces of the UUID decoded version (string), variant (string), timestamp (integer), timestamp_js (Date), random (hex string)
+     */
+    static decode(uuid) {
+
+        const uuid_hex = `${uuid}`.toLowerCase().replace(/[^0-9a-f]/g, ''); // string all non-hex characters
+        if (uuid_hex.length !== 32) {
+            throw new Error('Invalid UUID not length 32 when non-hex characters removed');
+        }
+
+        // timestamp
+        const timestamp_hex = uuid_hex.substring(0, 12);
+        const timestamp = parseInt(timestamp_hex, 16);
+        const timestamp_ms = timestamp / 100;
+        const timestamp_js = new Date(timestamp_ms);
+
+        // version
+        const version = uuid_hex.substring(12, 13);
+        const variant = uuid_hex.substring(16, 17);
+
+        // random
+        const random = `${uuid_hex.substring(13,16)}${uuid_hex.substring(17)}`;
+
+        return {
+            version,
+            variant,
+            timestamp,
+            timestamp_js,
+            random,
+        };
+
+    }
+}
+
+module.exports.CombUUID = CombUUID;
 
 /**
  * Route represents an HTTP route (method + path + handler)
