@@ -1144,6 +1144,7 @@ class Controller {
     /**
      * Creates a new instance of Controller
      *
+     * @constructor
      * @param {ObjectValidator} schema - validator for this object type
      * @param {Storage} storage - handles reading/writing data
      * @param {Logger} logger - logs important actions.
@@ -1337,4 +1338,278 @@ class JSONPointer {
 
 module.exports.JSONPointer = JSONPointer;
 
+/**
+ * TCTemplate Engine renders templates.
+ *
+ * @version 1.0.0
+ */
+class TCTemplate {
 
+    /**
+     * Creates a new instance of TCTemplate.
+     *
+     * @constructor
+     * @param {string} template - template to render.
+     * @throws {TCError} TCTemplateMustBeStringError
+     */
+    constructor(template = '') {
+        if (typeof template !== 'string') {
+            throw new TCError('TCTemplateMustBeStringError', 'template must be a string.', { template });
+        }
+
+        this.template = template;
+        this.output = '';
+        this.inComment = 0;
+        this.inFalseIf = 0;
+        this.openTags = [];
+
+        this.inForLoop = 0;
+        this.forLoopVars = [];
+        this.forLoopContents = '';
+    }
+
+    /**
+     * Internal method called for any TCTemplate start tag
+     *
+     * @param {string} tag - tag text.
+     * @throws {TCError} TCTemplateStartTagMustBeStringError or TCTemplateUnrecognizedStartTagError
+     */
+    startTag(tag) {
+
+        if (typeof tag !== 'string') {
+            throw new TCError('TCTemplateStartTagMustBeStringError', 'start tag must be a string.', { tag });
+        }
+
+        if (this.inForLoop !== 0) {
+            this.forLoopContents += tag;
+            if (tag.startsWith('[for ')) {
+                this.inForLoop++;
+            }
+            return;
+        }
+
+        switch (true) {
+
+            case /^\[for [^ ]+ in [^\]]+\]$/i.test(tag):
+                this.inForLoop = 1;
+                this.forLoopVars = tag.slice(5, -1).split(/ in /);
+                break;
+
+            case /^\[comment\]$/i.test(tag):
+                this.inComment++;
+                break;
+
+            case /^\[if [^\]]+\]$/i.test(tag):
+                if (this.inFalseIf || JSONPointer.get(this.locals, tag.slice(4, -1)) !== true) {
+                    this.inFalseIf++;
+                }
+                break;
+
+            default:
+                throw new TCError('TCTemplateUnrecognizedStartTagError', 'unrecognized TCTemplate start tag', { tag });
+
+        }
+
+        const actualTag = tag.slice(1).split(/[ =\]]/)[0];
+        this.openTags.push(actualTag);
+
+    }
+
+    /**
+     * Internal method called for any TCTemplate self closing tag
+     *
+     * @param {string} tag - tag text.
+     * @throws {TCError} TCTemplateSelfClosingTagMustBeStringError or TCTemplateUnrecognizedSelfClosingTagError
+     */
+    selfClosingTag(tag) {
+
+        if (typeof tag !== 'string') {
+            throw new TCError('TCTemplateSelfClosingTagMustBeStringError', 'self closing tag must be a string.', { tag });
+        }
+
+        if (this.inForLoop !== 0) {
+            this.forLoopContents += tag;
+            return;
+        }
+
+        if (this.inComment !== 0 || this.inFalseIf !== 0) {
+            return;
+        }
+
+        switch (true) {
+
+            case /^\[=[^\]]+\]$/i.test(tag):
+                this.output += TCTemplate.encodeHtmlEntities( `${JSONPointer.get(this.locals, tag.slice(2, -1))}` );
+                break;
+
+            case /^\[-[^\]]+\]$/i.test(tag):
+                this.output += `${JSONPointer.get(this.locals, tag.slice(2, -1))}`;
+                break;
+
+            default:
+                throw new TCError('TCTemplateUnrecognizedSelfClosingTagError', 'unrecognized TCTemplate self closing tag', { tag });
+        }
+
+    }
+
+    /**
+     * Internal method called for any TCTemplate text that isn't part of a tag.
+     *
+     * @param {string} txt - text.
+     * @throws {TCError} TCTemplateTextMustBeStringError
+     */
+    text(txt) {
+        if (typeof txt !== 'string') {
+            throw new TCError('TCTemplateTextMustBeStringError', 'text must be a string.', { tag });
+        }
+
+        if (this.inForLoop !== 0) {
+            this.forLoopContents += txt;
+            return;
+        }
+
+        if (this.inComment === 0 && this.inFalseIf === 0) {
+            this.output += txt;
+        }
+    }
+
+    /**
+     * Internal method called for any TCTemplate end tag
+     *
+     * @param {string} tag - tag text.
+     * @throws {TCError} TCTemplateEndTagMustBeStringError or TCTemplateUnrecognizedEndTagError or TCTemplateUnbalancedTagsError
+     */
+    endTag(tag) {
+
+        if (typeof tag !== 'string') {
+            throw new TCError('TCTemplateEndTagMustBeStringError', 'end tag must be a string.', { tag });
+        }
+
+        if (tag === '[/for]') {
+            this.inForLoop--;
+        }
+        if (this.inForLoop !== 0) {
+            this.forLoopContents += tag;
+            return;
+        }
+
+        switch (tag) {
+
+            case '[/for]':
+                const inner = new TCTemplate(this.forLoopContents);
+                JSONPointer.get(this.locals, this.forLoopVars[1]).forEach((item) => {
+                    JSONPointer.set(this.locals, this.forLoopVars[0], item);
+                    this.output += inner.render(this.locals);
+                });
+                this.forLoopContents = '';
+                this.forLoopVars = [];
+                break;
+
+            case '[/comment]':
+                this.inComment--;
+                break;
+
+            case '[/if]':
+                if (this.inFalseIf !== 0) {
+                    this.inFalseIf--;
+                }
+                break;
+
+            default:
+                throw new TCError('TCTemplateUnrecognizedEndTagError', 'unrecognized TCTemplate end tag', { tag });
+        }
+
+        const expectedTag = this.openTags.pop();
+        const actualTag = tag.slice(2).split(/[ =\]]/)[0];
+        if (expectedTag !== actualTag) {
+            throw new TCError('TCTemplateUnbalancedTagsError', 'unbalanced tags', { expectedTag, actualTag });
+        }
+    }
+
+    /**
+     * Internal method called when the template has been fully rendered.
+     *
+     * @return {string} rendered output
+     * @throws {TCError} TCTemplateMissingClosingTagsError
+     */
+    done() {
+        if (this.openTags.length !== 0) {
+            throw new TCError('TCTemplateMissingClosingTagsError', 'missing closing tag(s)', { openTags: this.openTags });
+        }
+        const output = this.output;
+        this.output = '';
+        return output;
+    }
+
+    /**
+     * Render the template.
+     *
+     * @param {object} locals - values for use in the template.
+     * @return {string} rendered output
+     * @throws {TCError} TCTemplateLocalsMustBeObject
+     */
+    render(locals = {}) {
+
+        if (typeof locals !== 'object' && locals !== null) {
+            throw new TCError('TCTemplateLocalsMustBeObject', 'locals must be a non-null object.', { locals });
+        }
+
+        this.locals = locals;
+        this.output = '';
+        this.openTags = [];
+
+        let token = '';
+        let in_tag = false;
+        let input = this.template.split('');
+
+        while (input.length > 0) {
+
+            const ch = input.shift();
+
+            if (in_tag && ch === ']') {
+                token += ch;
+                in_tag = false;
+                if (token[1] === '/') {
+                    this.endTag(token);
+                } else if (token[1] === '=' || token[1] === '-') {
+                    this.selfClosingTag(token);
+                } else {
+                    this.startTag(token);
+                }
+                token = '';
+            } else if (!in_tag && ch === '[') {
+                input.unshift(ch);
+                in_tag = true;
+                if (token.length > 0) {
+                    this.text(token);
+                }
+                token = '';
+            } else {
+                token += ch;
+            }
+
+        }
+
+        this.output += token; // append any trailing text
+
+        return this.done();
+
+    }
+
+    /**
+     * Encodes HTML Entities.
+     *
+     * @static
+     * @param {string} input - text to encode.
+     * @throws {TCError} TCTemplateEncodeHtmlEntitiesInputMustBeStringError
+     */
+    static encodeHtmlEntities(input) {
+        if (typeof input !== 'string') {
+            throw new TCError('TCTemplateEncodeHtmlEntitiesInputMustBeStringError', 'input must be a string.');
+        }
+        return input.replace(/[\u00A0-\u9999<>\&"']/gim, (ch) => `&#${ch.charCodeAt(0)};`);
+    }
+
+}
+
+module.exports.TCTemplate = TCTemplate;
