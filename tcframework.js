@@ -1130,3 +1130,114 @@ class ConsoleLogger extends Logger {
 }
 
 module.exports.ConsoleLogger = ConsoleLogger;
+
+/**
+ * Controller orchestrates data storage and validation.
+ *
+ * @version 1.0.0
+ */
+class Controller {
+
+    /**
+     * Creates a new instance of Controller
+     *
+     * @param {ObjectValidator} schema - validator for this object type
+     * @param {Storage} storage - handles reading/writing data
+     * @param {Logger} logger - logs important actions.
+     */
+    constructor(schema, storage, logger) {
+        this.schema = schema;
+        this.storage = storage;
+        this.logger = logger;
+    }
+
+    /**
+     * Create the resource
+     *
+     * @async
+     * @param {object} delta - data to create.
+     * @return {string|number} resource identifier.
+     */
+    async create(obj = {}) {
+        this.schema.validate(obj);
+        return await this.storage.create(obj);
+    }
+
+    /**
+     * Read the resource
+     *
+     * @async
+     * @param {string} id - resource identifier.
+     * @return {Object}
+     */
+    async read(id = '') {
+        const result = await this.storage.read(id);
+        this.schema.validate(result);
+        return result;
+    }
+
+    /**
+     * Create or update resource
+     *
+     * @async
+     * @param {string} id - resource identifier.
+     * @param {object} delta - data to create or update.
+     */
+    async upsert(id = '', obj = {}) {
+        try {
+            await this.create(obj);
+        } catch (err) {
+            await this.update(id, obj);
+        }
+    }
+
+    /**
+     * Update resource
+     *
+     * @async
+     * @param {string} id - resource identifier.
+     * @param {object} delta - data to update.
+     */
+    async update(id = '', obj = {}) {
+        this.schema.validate(obj);
+        await this.storage.update(id, obj);
+    }
+
+    /**
+     * Partial update resource
+     *
+     * @async
+     * @param {string} id - resource identifier.
+     * @param {object} delta - data to update.
+     */
+    async patch(id = '', delta = {}) {
+        await this.storage.patch(id, delta);
+    }
+
+    /**
+     * Delete the resource.
+     *
+     * @async
+     * @param {string} id - resource identifier.
+     */
+    async delete(id = '') {
+        await this.storage.delete(id);
+    }
+
+    /**
+     * List resources.
+     *
+     * @async
+     * @param {object} filter - selects which resources to return.
+     * @return {object[]}
+     */
+    async list(filter = {}) {
+        const results = await this.storage.list(filter);
+        results.forEach((result) => this.schema.validate(result));
+        return results;
+    }
+}
+
+module.exports.Controller = Controller;
+
+
