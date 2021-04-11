@@ -1760,6 +1760,7 @@ module.exports.mtrand = mtrand;
  * not secure, but it doesn't need to be unguessable.
  *
  * @version 1.0.0
+ * @private
  */
 const comb_rng = mtrand(new Date().getTime(), 256);
 
