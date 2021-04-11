@@ -775,3 +775,40 @@ class StringValidator extends ValidatorBase {
 
 module.exports.StringValidator = StringValidator;
 
+/**
+ * Validator builds a validator
+ *
+ * @version 1.0.0
+ */
+class Validator {
+
+    /**
+     * Builds a boolean validator.
+     *
+     * @returns {BooleanValidator}
+     */
+    static boolean() {
+        return new BooleanValidator();
+    }
+
+    /**
+     * Builds a string validator.
+     *
+     * @returns {StringValidator}
+     */
+    static string() {
+        return new StringValidator();
+    }
+
+    /**
+     * Builds an object validator.
+     *
+     * @returns {ObjectValidator}
+     */
+    static object(obj = {}) {
+        return new ObjectValidator(obj);
+    }
+
+}
+
+module.exports.Validator = Validator;
