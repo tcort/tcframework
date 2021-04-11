@@ -1172,7 +1172,7 @@ class Controller {
      *
      * @async
      * @param {string} id - resource identifier.
-     * @return {Object}
+     * @return {object}
      */
     async read(id = '') {
         const result = await this.storage.read(id);
@@ -1613,3 +1613,64 @@ class TCTemplate {
 }
 
 module.exports.TCTemplate = TCTemplate;
+
+/**
+ * Route represents an HTTP route (method + path + handler)
+ *
+ * @version 1.0.0
+ */
+class Route {
+
+    /**
+     * Creates a new instance of Route
+     *
+     * @constructor
+     * @param {object} obj - parameters (method - HTTP method name, pattern - string or RegExp to match, hander - async function to handle the request)
+     */
+    constructor(obj = {}) {
+
+        if (typeof obj !== 'object') {
+            obj = {};
+        }
+
+        this.method = (typeof obj.method === 'string' || Array.isArray(obj.method)) ? obj.method : ['GET','HEAD'];
+        if (!Array.isArray(this.method)) {
+            this.method = [this.method];
+        }
+        this.method = this.method.map((method) => method.toUpperCase());
+
+        this.pattern = obj.pattern || /^.*$/;
+
+        this.handler = obj.handler || (async (req, res) => {});
+        if (typeof this.handler !== 'function') {
+            this.handler = (async (req, res) => {});
+        }
+
+    }
+
+    /**
+     * Matches this route against a given method and URL path
+     *
+     * @param {string} method - http method
+     * @param {string} remoteUrl - URL path
+     * @return {boolean}
+     */
+    match(method = 'GET', remoteUrl = '/') {
+
+        // match method?
+        if (!this.method.includes(method.toUpperCase())) {
+            return false;
+        }
+
+        // match pattern?
+        if (this.pattern instanceof RegExp) {
+            return this.pattern.test(remoteUrl);
+        } else if (typeof this.pattern === 'string') {
+            return this.pattern === remoteUrl;
+        }
+
+        return false;
+    }
+}
+
+module.exports.Route = Route;
