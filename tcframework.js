@@ -1938,3 +1938,97 @@ async function bodyParser(contentType, stream) {
 }
 
 module.exports.bodyParser = bodyParser;
+
+/**
+ * Storage engine interface
+ *
+ * @version 1.0.0
+ */
+class Storage {
+
+    /**
+     * Creates a new instance of Storage
+     *
+     * @constructor
+     * @param {object} opts - options for the storage engine.
+     */
+    constructor(opts = {}) {
+        this.opts = typeof opts === 'object' && opts !== null ? opts : {};
+    }
+
+    /**
+     * Create the record in the storage engine
+     *
+     * @param {object} obj - object to store.
+     * @throws {TCError} NotImplementedError
+     */
+    async create(obj) {
+        throw new TCError('NotImplementedError', 'Storage.create(obj)');
+    }
+
+    /**
+     * Read the record in the storage engine.
+     *
+     * @param {string|number} id - identifier / primary key.
+     * @throws {TCError} NotImplementedError
+     */
+    async read(id) {
+        throw new TCError('NotImplementedError','Storage.read(id)');
+    }
+
+    /**
+     * Update the record in the storage engine.
+     *
+     * @param {string|number} id - identifier / primary key.
+     * @param {object} obj - object to store.
+     * @throws {TCError} NotImplementedError
+     */
+    async update(id, obj) {
+        throw new TCError('NotImplementedError','Storage.update(id, obj)');
+    }
+
+    /**
+     * Create or Update the record in the storage engine.
+     *
+     * @param {string|number} id - identifier / primary key.
+     * @param {object} obj - object to store.
+     * @throws {TCError} NotImplementedError
+     */
+    async upsert(id, obj) {
+        throw new TCError('NotImplementedError','Storage.upsert(id, obj)');
+    }
+
+    /**
+     * Partial Update of the record in the storage engine.
+     *
+     * @param {string|number} id - identifier / primary key.
+     * @param {object} delta - changes to apply.
+     * @throws {TCError} NotImplementedError
+     */
+    async patch(id, delta) {
+        throw new TCError('NotImplementedError','Storage.patch(id, delta)');
+    }
+
+    /**
+     * Delete the record in the storage engine.
+     *
+     * @param {string|number} id - identifier / primary key.
+     * @throws {TCError} NotImplementedError
+     */
+    async delete(id) {
+        throw new TCError('NotImplementedError','Storage.delete(id)');
+    }
+
+    /**
+     * List records in the storage engine.
+     *
+     * @param {object} filter - selects which records to return.
+     * @throws {TCError} NotImplementedError
+     */
+    async list(filter) {
+        throw new TCError('NotImplementedError','Storage.list(filter)');
+    }
+
+}
+
+module.exports.Storage = Storage;
