@@ -22,6 +22,8 @@
  * @license ISC
  */
 
+'use strict';
+
 module.exports = {};
 
 /**
@@ -943,7 +945,6 @@ const HttpStatusText = {
     SWITCHING_PROTOCOL: 'Switching Protocol',
     PROCESSING: 'Processing',
     EARLY_HINTS: 'Early Hints',
-    CONTINUE: 'Continue',
 
     // Success (2xx)
     OK: 'OK',
@@ -1303,15 +1304,16 @@ class JSONPointer {
      * @param {object} obj - object to set the value in.
      * @param {string} ptr - JSONPointer.
      * @param {any} value - value to set.
+     * @throws {TCError} JSONPointerError
      */
     static set(obj, ptr, value) {
 
-        if (typeof obj !== 'object' || obj == null) {
-            throw new JSONPointerError(obj, ptr, 'obj must be a non-null object');
+        if (typeof obj !== 'object' || obj === null) {
+            throw new TCError('JSONPointerError', 'obj must be a non-null object', { obj, ptr });
         }
 
         if (typeof ptr !== 'string') {
-            throw new JSONPointerError(obj, ptr, 'ptr must be a string');
+            throw new TCError('JSONPointerError', 'ptr must be a string', { obj, ptr });
         }
 
         if (ptr === '') {
@@ -1319,7 +1321,7 @@ class JSONPointer {
         }
 
         if (ptr[0] !== '/') {
-            throw new JSONPointerError(obj, ptr, 'non-empty ptr must begin with a "/"');
+            throw new TCError('JSONPointerError', 'non-empty ptr must begin with a "/"', { obj, ptr });
         }
 
         const components = ptr
@@ -1346,15 +1348,16 @@ class JSONPointer {
      * @static
      * @param {object} obj - object to get the value from.
      * @param {string} ptr - JSONPointer.
+     * @throws {TCError} JSONPointerError
      */
     static get(obj, ptr) {
 
-        if (typeof obj !== 'object' || obj == null) {
-            throw new JSONPointerError(obj, ptr, 'obj must be a non-null object');
+        if (typeof obj !== 'object' || obj === null) {
+            throw new TCError('JSONPointerError', 'obj must be a non-null object', { obj, ptr });
         }
 
         if (typeof ptr !== 'string') {
-            throw new JSONPointerError(obj, ptr, 'ptr must be a string');
+            throw new TCError('JSONPointerError', 'ptr must be a string', { obj, ptr });
         }
 
         if (ptr === '') {
@@ -1362,7 +1365,7 @@ class JSONPointer {
         }
 
         if (ptr[0] !== '/') {
-            throw new JSONPointerError(obj, ptr, 'non-empty ptr must begin with a "/"');
+            throw new TCError('JSONPointerError', 'non-empty ptr must begin with a "/"', { obj, ptr });
         }
 
         const components = ptr
@@ -1372,7 +1375,7 @@ class JSONPointer {
                                 .slice(1);                                          // chop off array head (which will be '')
 
         return components.reduce((result, component) => {
-            if (typeof result !== 'object' || result == null) {
+            if (typeof result !== 'object' || result === null) {
                 return undefined; // path not found
             }
             return result[component];
@@ -2032,3 +2035,172 @@ class Storage {
 }
 
 module.exports.Storage = Storage;
+
+/**
+ * HttpReqResDecorator allows (req,res) to be decorated for additional functionality.
+ * Set headers, add functions (e.g. res.render()), etc.
+ *
+ * @version 1.0.0
+ */
+class HttpReqResDecorator {
+
+    /**
+     * Creates a new instance of HttpReqResDecorator
+     *
+     * @constructor
+     */
+    constructor() {}
+
+    /**
+     * Adds functionality to req and/or res
+     *
+     * @param {object} req - Http Request Object
+     * @param {object} res - Http Response Object
+     */
+    decorate(req, res) {}
+}
+
+module.exports.HttpReqResDecorator = HttpReqResDecorator;
+
+/**
+ * UrlHttpReqResDecorator adds URL components to req.
+ *
+ * @version 1.0.0
+ * @extends HttpReqResDecorator
+ */
+class UrlHttpReqResDecorator extends HttpReqResDecorator {
+
+    /**
+     * Creates a new instance of UrlHttpReqResDecorator
+     *
+     * @constructor
+     */
+    constructor() {
+        super();
+    }
+
+    /**
+     * Adds the parsed request URL parts (href, host, port, protocol, etc to req.
+     *
+     * @param {object} req - Http Request Object
+     * @param {object} res - Http Response Object
+     */
+    decorate(req, res) {
+        // parse req.url and expose it on req
+        const url = new URL(`http://${req.url}`);
+
+        [
+            'href',
+            'origin',
+            'protocol',
+            'username',
+            'password',
+            'host',
+            'hostname',
+            'port',
+            'pathname',
+            'search',
+            'searchParams',
+            'hash',
+        ].forEach(property => req[property] = url[property]);
+    }
+}
+
+module.exports.UrlHttpReqResDecorator = UrlHttpReqResDecorator;
+
+/**
+ * ControllersHttpReqResDecorator adds req.controllers
+ *
+ * @version 1.0.0
+ * @extends HttpReqResDecorator
+ */
+class ControllersHttpReqResDecorator extends HttpReqResDecorator {
+
+    /**
+     * Creates a new instance of ControllersHttpReqResDecorator
+     *
+     * @constructor
+     * @param {object} controllers - an object with controllers in it.
+     */
+    constructor(controllers = {}) {
+        super();
+        this.controllers = controllers;
+    }
+
+    /**
+     * Adds controllers to req
+     *
+     * @param {object} req - Http Request Object
+     * @param {object} res - Http Response Object
+     */
+    decorate(req, res) {
+        req.controllers = this.controllers;
+    }
+}
+
+module.exports.ControllersHttpReqResDecorator = ControllersHttpReqResDecorator;
+
+/**
+ * XRequestIDHttpReqResDecorator adds the X-Request-ID response header and sets req.request_id.
+ * Log the request_id so that you can correlate the request with the actions performed.
+ *
+ * @version 1.0.0
+ * @extends HttpReqResDecorator
+ */
+class XRequestIDHttpReqResDecorator extends HttpReqResDecorator {
+
+    /**
+     * Creates a new instance of XRequestIDHttpReqResDecorator
+     *
+     * @constructor
+     */
+    constructor() {
+        super();
+    }
+
+    /**
+     * adds the X-Request-ID response header and sets req.request_id
+     *
+     * @param {object} req - Http Request Object
+     * @param {object} res - Http Response Object
+     */
+    decorate(req, res) {
+        req.request_id = CombUUID.encode();
+        res.setHeader('X-Request-ID', req.request_id);
+    }
+}
+
+module.exports.XRequestIDHttpReqResDecorator = XRequestIDHttpReqResDecorator;
+
+
+/**
+ * LoggerHttpReqResDecorator adds req.log.
+ *
+ * @version 1.0.0
+ * @extends HttpReqResDecorator
+ */
+class LoggerHttpReqResDecorator extends HttpReqResDecorator {
+
+    /**
+     * Creates a new instance of LoggerHttpReqResDecorator
+     *
+     * @constructor
+     * @param {Logger} logger - a logger instance.
+     */
+    constructor(logger = new Logger()) {
+        super();
+        this.logger = logger;
+    }
+
+    /**
+     * adds this.logger to req.logger
+     *
+     * @param {object} req - Http Request Object
+     * @param {object} res - Http Response Object
+     */
+    decorate(req, res) {
+        req.logger = this.logger;
+    }
+}
+
+module.exports.LoggerHttpReqResDecorator = LoggerHttpReqResDecorator;

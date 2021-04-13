@@ -60,11 +60,11 @@ class Server {
             }
 
             // not routed (i.e. route not found)
-            res.writeHead(StatusCode.NOT_FOUND, StatusText.NOT_FOUND, {
-                'Content-Length': Buffer.byteLength(StatusText.NOT_FOUND),
+            res.writeHead(HttpStatusCodes.NOT_FOUND, HttpStatusText.NOT_FOUND, {
+                'Content-Length': Buffer.byteLength(HttpStatusText.NOT_FOUND),
                 'Content-Type': 'text/plain',
             });
-            res.end(StatusText.NOT_FOUND);
+            res.end(HttpStatusText.NOT_FOUND);
         });
     }
 
