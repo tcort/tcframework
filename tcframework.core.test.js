@@ -31,7 +31,7 @@ const {
     TCTemplate,
     mtrand,
     CombUUID,
-} = require('./tcframework');
+} = require('./tcframework.core');
 
 ////////////////////////////////////////////
 //

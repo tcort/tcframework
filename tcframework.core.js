@@ -17,7 +17,7 @@
 */
 
 /**
- * @file TC Framework
+ * @file TC Framework Core
  * @copyright Copyright (c) 2021 Thomas Cort <linuxgeek@gmail.com>
  * @license ISC
  */

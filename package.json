@@ -2,12 +2,12 @@
   "name": "tcframework",
   "version": "0.0.0",
   "description": "TC's JavaScript Framework",
-  "main": "tcframework.js",
+  "main": "tcframework.core.js",
   "directories": {
     "lib": "lib"
   },
   "scripts": {
-    "test": "node tcframework.test.js"
+    "test": "node tcframework.core.test.js"
   },
   "repository": {
     "type": "git",
