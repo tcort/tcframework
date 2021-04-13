@@ -2172,7 +2172,6 @@ class XRequestIDHttpReqResDecorator extends HttpReqResDecorator {
 
 module.exports.XRequestIDHttpReqResDecorator = XRequestIDHttpReqResDecorator;
 
-
 /**
  * LoggerHttpReqResDecorator adds req.log.
  *
@@ -2204,3 +2203,41 @@ class LoggerHttpReqResDecorator extends HttpReqResDecorator {
 }
 
 module.exports.LoggerHttpReqResDecorator = LoggerHttpReqResDecorator;
+
+/**
+ * JsonHttpReqResDecorator adds req.json(obj)
+ *
+ * @version 1.0.0
+ * @extends HttpReqResDecorator
+ */
+class JsonHttpReqResDecorator extends HttpReqResDecorator {
+
+    /**
+     * Creates a new instance of JsonHttpReqResDecorator
+     *
+     * @constructor
+     */
+    constructor() {
+        super();
+    }
+
+    /**
+     * adds req.json(obj)
+     *
+     * @param {object} req - Http Request Object
+     * @param {object} res - Http Response Object
+     */
+    decorate(req, res) {
+        // JSON output
+        res.json = (json) => {
+            const body = JSON.stringify(json, null, 4);
+            res.writeHead(HttpStatusCodes.OK, HttpStatusText.OK, {
+                'Content-Length': Buffer.byteLength(body),
+                'Content-Type': 'application/json',
+            });
+            res.end(body);
+        };
+    }
+}
+
+module.exports.JsonHttpReqResDecorator = JsonHttpReqResDecorator;
