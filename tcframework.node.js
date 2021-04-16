@@ -32,7 +32,7 @@ const http = require('http');
 const path = require('path');
 const {
     CombUUID,
-    HttpStatusCodes,
+    HttpStatusCode,
     HttpStatusText,
     Storage,
     bodyParser,
@@ -64,7 +64,7 @@ class Server {
             }
 
             // not routed (i.e. route not found)
-            res.writeHead(HttpStatusCodes.NOT_FOUND, HttpStatusText.NOT_FOUND, {
+            res.writeHead(HttpStatusCode.NOT_FOUND, HttpStatusText.NOT_FOUND, {
                 'Content-Length': Buffer.byteLength(HttpStatusText.NOT_FOUND),
                 'Content-Type': 'text/plain',
             });

@@ -1912,6 +1912,92 @@ class Route {
 
 module.exports.Route = Route;
 
+
+/**
+ * Routes Incoming HTTP Requests to the appropriate Route
+ */
+class Router {
+
+
+    constructor(obj = {}) {
+
+        if (typeof obj !== 'object' || obj === null) {
+            obj = {};
+        }
+
+        this.decorators = Array.isArray(obj.decorators) ? obj.decorators : [];  // HttpReqResDecorator[]
+        this.logger = obj.logger instanceof Logger ? obj.logger : new Logger(); // Logger
+        this.routes = Array.isArray(obj.routes) ? obj.routes.map((route) => new Route(route)) : [];
+    }
+
+    use(route) {
+        this.logger.inTestEnv(`Router: adding route ${route.method.join(',')} ${route.pattern}`);
+        this.routes.push(route);
+    }
+
+    register(method, pattern, route) {
+        if (!(route instanceof Route) && typeof route === 'function') {
+            route = new Route({ handler: route });
+        }
+        route.method = Array.isArray(method) ? method : [method];
+        route.pattern = pattern || new RegExp(/^.*$/);
+
+        this.use(route);
+    }
+
+    post(pattern, route) {
+        this.register('POST', pattern, route);
+    }
+
+    options(pattern, route) {
+        this.register('OPTIONS', pattern, route);
+    }
+
+    put(pattern, route) {
+        this.register('PUT', pattern, route);
+    }
+
+    get(pattern, route) {
+        this.register(['GET','HEAD'], pattern, route);
+    }
+
+    delete(pattern, route) {
+        this.register('DELETE', pattern, route);
+    }
+
+    async route(req, res) {
+        this.decorators.forEach((decorator) => decorator.decorate(req, res));
+
+        const route = this.routes.find((route) => route.match(req.method, req.pathname));
+        if (route) {
+            this.logger.inTestEnv(`Router: matched requested ${req.method} ${req.pathname} to backend route ${route.method} ${route.pattern}`);
+            req.params = route.pattern instanceof RegExp ? (route.pattern.exec(req.pathname).groups || {}) : {};
+            try {
+                await route.handler(req, res);
+            } catch (err) {
+                if (err.code === 'ENOENT') {
+                    res.writeHead(HttpStatusCode.NOT_FOUND, HttpStatusText.NOT_FOUND, {
+                        'Content-Length': Buffer.byteLength(HttpStatusText.NOT_FOUND),
+                        'Content-Type': 'text/plain',
+                    });
+                    res.end(HttpStatusText.NOT_FOUND);
+                } else {
+                    this.logger.wakeMeInTheMiddleOfTheNight(HttpStatusText.INTERNAL_SERVER_ERROR, err);
+                    res.writeHead(HttpStatusCode.INTERNAL_SERVER_ERROR, HttpStatusText.INTERNAL_SERVER_ERROR, {
+                        'Content-Length': Buffer.byteLength(HttpStatusText.INTERNAL_SERVER_ERROR),
+                        'Content-Type': 'text/plain'
+                    });
+                    res.end(HttpStatusText.INTERNAL_SERVER_ERROR);
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+}
+
+module.exports.Router = Router;
+
 /**
  * Collects data from a stream into one UTF-8 string.
  * When contentType is application/json, it is parsed into an object
@@ -2087,7 +2173,7 @@ class UrlHttpReqResDecorator extends HttpReqResDecorator {
      */
     decorate(req, res) {
         // parse req.url and expose it on req
-        const url = new URL(`http://${req.url}`);
+        const url = new URL(`http://${req.headers.host || 'localhost'}${req.url}`);
 
         [
             'href',
@@ -2282,4 +2368,4 @@ class RenderHttpReqResDecorator extends HttpReqResDecorator {
     }
 }
 
-module.exports.JsonHttpReqResDecorator = JsonHttpReqResDecorator;
+module.exports.RenderHttpReqResDecorator = RenderHttpReqResDecorator;
