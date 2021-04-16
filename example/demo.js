@@ -15,6 +15,7 @@ const {
 
 const {
     JSONStorage,
+    FileRenderHttpReqResDecorator,
     Server,
 } = require('../tcframework.node');
 
@@ -33,12 +34,13 @@ const storage = new JSONStorage({ basedir: path.join(__dirname, 'storage') });
 const decorators = [
     new UrlHttpReqResDecorator(),
     new ControllersHttpReqResDecorator({
-        todo: new ToDoController(),
+        todo: new ToDoController(storage, logger),
     }),
     new XRequestIDHttpReqResDecorator(),
     new LoggerHttpReqResDecorator({ logger }),
     new JsonHttpReqResDecorator(),
     new RenderHttpReqResDecorator(),
+    new FileRenderHttpReqResDecorator({ viewsdir: path.join(__dirname, 'views') }),
 ];
 
 const router = new Router({
@@ -47,8 +49,35 @@ const router = new Router({
 });
 
 
+// routes
 router.get('/', async (req, res) => {
-    await res.render('Hello, World!');
+    res.locals.todos = (await req.controllers.todo.list()).reverse();
+    await res.renderFile('index.tct');
+});
+
+// Create - POST /todos/:id
+router.post('/todos', async (req, res) => {
+    const id = await req.controllers.todo.create(req.body);
+
+    res.setHeader('Location', `/todos/${id}`);
+    res.json(await req.controllers.todo.read(id));
+});
+
+// Read - GET /todos/:id
+router.get(/^\/todos\/(?<id>[A-Za-z0-9-]+)$/, async (req, res) => {
+    res.json(await req.controllers.todo.read(req.params.id));
+});
+
+// Update (or create) - PUT /todos/:id
+router.put(/^\/todos\/(?<id>[A-Za-z0-9-]+)$/, async (req, res) => {
+    await req.controllers.todo.upsert(req.params.id, req.body);
+    res.json(await req.controllers.todo.read(req.params.id));
+});
+
+// Delete - DELETE /todos/:id
+router.delete(/^\/todos\/(?<id>[A-Za-z0-9-]+)$/, async (req, res) => {
+    await req.controllers.todo.delete(req.params.id);
+    res.json({ status: 'ok' });
 });
 
 

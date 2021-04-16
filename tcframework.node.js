@@ -34,7 +34,9 @@ const {
     CombUUID,
     HttpStatusCode,
     HttpStatusText,
+    HttpReqResDecorator,
     Storage,
+    TCTemplate,
     bodyParser,
 } = module.exports;
 
@@ -187,3 +189,55 @@ class JSONStorage extends Storage {
 }
 
 module.exports.JSONStorage = JSONStorage;
+
+/**
+ * FileRenderHttpReqResDecorator adds res.renderFile(filename)
+ *
+ * @version 1.0.0
+ * @extends HttpReqResDecorator
+ */
+class FileRenderHttpReqResDecorator extends HttpReqResDecorator {
+
+    /**
+     * Creates a new instance of RenderHttpReqResDecorator
+     *
+     * @constructor
+     */
+    constructor(obj = {}) {
+        super();
+        this.viewsdir = typeof obj.viewsdir === 'string' ? obj.viewsdir : path.join(path.sep, 'tmp', 'views');
+        this.views = {}
+    }
+
+    /**
+     * adds res.renderFile(filename)
+     *
+     * @param {object} req - Http Request Object
+     * @param {object} res - Http Response Object
+     */
+    decorate(req, res) {
+
+        res.locals = res.locals || {}; // template variables
+
+        res.renderFile = async (view) => {
+            view = path.basename(view); // sanitize view name
+
+            // check the cache to see if we have a compiled template
+            if (!this.views.hasOwnProperty(view)) {
+                const filepath = path.join(this.viewsdir, path.basename(view));
+                const file = await fs.readFile(filepath);
+                this.views[view] = new TCTemplate(file.toString());
+            }
+
+            // render the usual way
+            const body = this.views[view].render(res.locals);
+            res.writeHead(HttpStatusCode.OK, HttpStatusText.OK, {
+                'Content-Length': Buffer.byteLength(body),
+                'Content-Type': 'text/html',
+            });
+            res.end(body);
+        };
+    }
+}
+
+module.exports.FileRenderHttpReqResDecorator = FileRenderHttpReqResDecorator;
