@@ -27,10 +27,14 @@
 // extend core with node specific code
 module.exports = require('./tcframework.core');
 
+const fs = require('fs').promises;
 const http = require('http');
+const path = require('path');
 const {
+    CombUUID,
     HttpStatusCodes,
     HttpStatusText,
+    Storage,
     bodyParser,
 } = module.exports;
 
@@ -79,3 +83,107 @@ class Server {
 }
 
 module.exports.Server = Server;
+
+/**
+ * JSONStorage engine.
+ *
+ * stores objects as JSON files on the file system.
+ *
+ * @version 1.0.0
+ */
+class JSONStorage extends Storage {
+
+    /**
+     * Creates a new instance of JSONStorage
+     *
+     * @constructor
+     * @param {object} opts - options for the storage engine. Opts are pk (primary key) and basedir (path to storage location)
+     */
+    constructor(opts = {}) {
+        super(opts);
+
+        this.opts.pk = typeof opts.pk === 'string' ? opts.pk : 'id';
+        this.opts.basedir = typeof opts.basedir === 'string' ? opts.basedir : path.join(path.sep, 'tmp');
+    }
+
+    /**
+     * Constructs the path to a particular object's JSON file.
+     *
+     * @param {string} id - primary key value for this object.
+     * @returns {string}
+     */
+    locate(id = '') {
+        return path.join(this.opts.basedir, `${id}.json`);
+    }
+
+    /**
+     * Create the record in the storage engine
+     *
+     * @param {object} obj - object to store.
+     * @returns {string} id of this object
+     */
+    async create(obj) {
+        const id = CombUUID.encode();
+        await fs.writeFile(this.locate(id), JSON.stringify(obj, null, 4), { flag: 'wx' });
+        return id;
+    }
+
+    /**
+     * Read the record in the storage engine.
+     *
+     * @param {string|number} id - identifier / primary key.
+     * @returns {object}
+     */
+    async read(id) {
+        const content = await fs.readFile(this.locate(id));
+        const json = content.toString();
+        const obj = JSON.parse(json);
+        return obj;
+    }
+
+    /**
+     * Update the record in the storage engine.
+     *
+     * @param {string|number} id - identifier / primary key.
+     * @param {object} obj - object to store.
+     */
+    async update(id, obj) {
+        const orig = await this.read(id);
+        Object.assign(orig, obj); // apply changes
+        await fs.writeFile(this.locate(id), JSON.stringify(orig, null, 4), { flag: 'w' });
+    }
+
+    /**
+     * Partial Update of the record in the storage engine.
+     *
+     * @param {string|number} id - identifier / primary key.
+     * @param {object} delta - changes to apply.
+     */
+    async patch(id, delta) {
+        // update() can handle partial updates, so just call update()
+        await this.update(id, delta);
+    }
+
+    /**
+     * Delete the record in the storage engine.
+     *
+     * @param {string|number} id - identifier / primary key.
+     */
+    async delete(id) {
+        await fs.unlink(this.locate(id));
+    }
+
+    /**
+     * List records in the storage engine.
+     *
+     * @param {object} filter - selects which records to return.
+     * @returns {object[]}
+     */
+    async list(filter) {
+        const jsonfiles = (await fs.readdir(this.opts.basedir)).sort();
+        return await Promise.all(jsonfiles.map(async (jsonfile) =>  await this.read(jsonfile.replace(/\.json$/i,''))));
+    }
+
+}
+
+module.exports.JSONStorage = JSONStorage;
