@@ -1508,7 +1508,7 @@ class TCTemplate {
      */
     text(txt) {
         if (typeof txt !== 'string') {
-            throw new TCError('TCTemplateTextMustBeStringError', 'text must be a string.', { tag });
+            throw new TCError('TCTemplateTextMustBeStringError', 'text must be a string.', { txt });
         }
 
         if (this.inForLoop !== 0) {
@@ -2205,7 +2205,7 @@ class LoggerHttpReqResDecorator extends HttpReqResDecorator {
 module.exports.LoggerHttpReqResDecorator = LoggerHttpReqResDecorator;
 
 /**
- * JsonHttpReqResDecorator adds req.json(obj)
+ * JsonHttpReqResDecorator adds res.json(obj)
  *
  * @version 1.0.0
  * @extends HttpReqResDecorator
@@ -2222,7 +2222,7 @@ class JsonHttpReqResDecorator extends HttpReqResDecorator {
     }
 
     /**
-     * adds req.json(obj)
+     * adds res.json(obj)
      *
      * @param {object} req - Http Request Object
      * @param {object} res - Http Response Object
@@ -2231,9 +2231,51 @@ class JsonHttpReqResDecorator extends HttpReqResDecorator {
         // JSON output
         res.json = (json) => {
             const body = JSON.stringify(json, null, 4);
-            res.writeHead(HttpStatusCodes.OK, HttpStatusText.OK, {
+            res.writeHead(HttpStatusCode.OK, HttpStatusText.OK, {
                 'Content-Length': Buffer.byteLength(body),
                 'Content-Type': 'application/json',
+            });
+            res.end(body);
+        };
+    }
+}
+
+module.exports.JsonHttpReqResDecorator = JsonHttpReqResDecorator;
+
+/**
+ * RenderHttpReqResDecorator adds res.render(string|TCTemplate)
+ *
+ * @version 1.0.0
+ * @extends HttpReqResDecorator
+ */
+class RenderHttpReqResDecorator extends HttpReqResDecorator {
+
+    /**
+     * Creates a new instance of RenderHttpReqResDecorator
+     *
+     * @constructor
+     */
+    constructor() {
+        super();
+    }
+
+    /**
+     * adds res.render(string|TCTemplate)
+     *
+     * @param {object} req - Http Request Object
+     * @param {object} res - Http Response Object
+     */
+    decorate(req, res) {
+
+        // templating
+        res.locals = res.locals || {}; // template variables
+        res.render = (template) => { // template rendering - pass a template string or TCTemplate object
+            template = template instanceof TCTemplate ? template : new TCTemplate(template);
+
+            const body = template.render(res.locals);
+            res.writeHead(HttpStatusCode.OK, HttpStatusText.OK, {
+                'Content-Length': Buffer.byteLength(body),
+                'Content-Type': 'text/html',
             });
             res.end(body);
         };
