@@ -17,6 +17,7 @@ const {
     JSONStorage,
     FileRenderHttpReqResDecorator,
     Server,
+    StaticFilesRoute,
 } = require('../tcframework.node');
 
 const {
@@ -80,6 +81,10 @@ router.delete(/^\/todos\/(?<id>[A-Za-z0-9-]+)$/, async (req, res) => {
     res.json({ status: 'ok' });
 });
 
+router.use(new StaticFilesRoute({
+    filesdir: path.join(__dirname, 'public'),
+    mountpoint: '/',
+}));
 
 new Server({
     router,

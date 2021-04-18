@@ -35,6 +35,8 @@ const {
     HttpStatusCode,
     HttpStatusText,
     HttpReqResDecorator,
+    MimeTypes,
+    Route,
     Storage,
     TCTemplate,
     bodyParser,
@@ -241,3 +243,56 @@ class FileRenderHttpReqResDecorator extends HttpReqResDecorator {
 }
 
 module.exports.FileRenderHttpReqResDecorator = FileRenderHttpReqResDecorator;
+
+/**
+ * StaticFilesRoute serves a directory of static files ;)
+ *
+ * @version 1.0.0
+ */
+class StaticFilesRoute extends Route {
+
+    /**
+     * Creates a new instance of StaticFilesRoute
+     *
+     * @constructor
+     * @param {object} obj - options such as mountpoint.
+     */
+    constructor(obj = {}) {
+        const mountpoint = typeof obj.mountpoint === 'string' ? obj.mountpoint : '/files';
+        super({
+            method: ['GET','HEAD'],
+            pattern: new RegExp('^' + mountpoint + '(?<filename>.*)$'),
+            handler: async (req, res) => {
+                const filename = path.basename(path.normalize(req.params.filename));
+                const ext = path.extname(filename).slice(1);
+                const contentType = MimeTypes[ext] || 'application/bin';
+
+                try {
+                    const file = await fs.readFile(path.join(this.filesdir, filename));
+                    res.writeHead(HttpStatusCode.OK, HttpStatusText.OK, {
+                        'Content-Length': Buffer.byteLength(file),
+                        'Content-Type': contentType,
+                    });
+                    if (req.method.toLowerCase() === 'head') {
+                        res.end();
+                    } else {
+                        res.end(file);
+                    }
+
+                } catch (err) {
+console.log(err);
+    // TODO handler other errors
+    // TODO error logging
+                    res.writeHead(HttpStatusCode.NOT_FOUND, HttpStatusText.NOT_FOUND, {
+                        'Content-Length': Buffer.byteLength(HttpStatusText.NOT_FOUND),
+                        'Content-Type': 'text/plain',
+                    });
+                    res.end(HttpStatusText.NOT_FOUND);
+                }
+            },
+        });
+        this.filesdir = typeof obj.filesdir === 'string' ? obj.filesdir : path.join(path.set, 'tmp', 'files');
+    }
+}
+
+module.exports.StaticFilesRoute = StaticFilesRoute;
